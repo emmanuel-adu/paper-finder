@@ -1,65 +1,240 @@
-import Image from "next/image";
+"use client";
 
-export default function Home() {
+import { useState, type ReactNode } from "react";
+import { SearchBar } from "@/components/SearchBar";
+import { PaperCard } from "@/components/PaperCard";
+import { OwlMascot } from "@/components/OwlMascot";
+import { useSavedPapers } from "@/hooks/useSavedPapers";
+import { toS2RecommendationId } from "@/lib/papers/semanticScholar";
+import type { Paper, PaperSource, SearchResponse } from "@/lib/papers/types";
+
+type Tab = "search" | "recommended" | "saved";
+
+const SOURCE_LABELS: Record<PaperSource, string> = {
+  arxiv: "arXiv",
+  semanticscholar: "Semantic Scholar",
+  crossref: "Crossref",
+};
+
+export default function Page() {
+  const [tab, setTab] = useState<Tab>("search");
+  const [query, setQuery] = useState("");
+  const [papers, setPapers] = useState<Paper[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
+  const [errors, setErrors] = useState<SearchResponse["sourceErrors"]>({});
+
+  const [recommended, setRecommended] = useState<Paper[]>([]);
+  const [recLoading, setRecLoading] = useState(false);
+  const [recError, setRecError] = useState<string | null>(null);
+  const [recFetched, setRecFetched] = useState(false);
+
+  const savedPapers = useSavedPapers();
+
+  async function handleSearch(q: string) {
+    setQuery(q);
+    setLoading(true);
+    setSearched(true);
+    setTab("search");
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const data: SearchResponse = await res.json();
+      setPapers(data.papers);
+      setErrors(data.sourceErrors);
+    } catch {
+      setPapers([]);
+      setErrors({});
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleOpenRecommended() {
+    setTab("recommended");
+    if (savedPapers.saved.length === 0) return;
+
+    setRecLoading(true);
+    setRecError(null);
+    try {
+      const paperIds = savedPapers.saved
+        .map(toS2RecommendationId)
+        .filter((id): id is string => Boolean(id));
+
+      if (paperIds.length === 0) {
+        setRecommended([]);
+        setRecError(
+          "None of your saved papers could be matched for recommendations yet.",
+        );
+        return;
+      }
+
+      const res = await fetch("/api/recommendations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paperIds }),
+      });
+      const data = await res.json();
+      setRecommended(data.papers ?? []);
+    } catch {
+      setRecError("Couldn't reach the recommendations service just now.");
+    } finally {
+      setRecLoading(false);
+      setRecFetched(true);
+    }
+  }
+
+  const errorEntries = Object.entries(errors) as [PaperSource, string][];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
+      <header className="mb-8 flex items-center gap-3">
+        <OwlMascot pose="mark" className="h-12 w-12" />
+        <div>
+          <h1 className="font-display text-3xl font-bold">Paper Finder</h1>
+          <p className="text-sm text-ink/60">
+            Search arXiv, Semantic Scholar, and Crossref at once. No login,
+            ever.
           </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </header>
+
+      <SearchBar onSearch={handleSearch} loading={loading} />
+
+      <nav className="my-6 flex gap-6 border-b-2 border-ink/10">
+        <TabButton active={tab === "search"} onClick={() => setTab("search")}>
+          Search{query ? ` (${papers.length})` : ""}
+        </TabButton>
+        <TabButton
+          active={tab === "recommended"}
+          onClick={handleOpenRecommended}
+        >
+          Recommended
+        </TabButton>
+        <TabButton active={tab === "saved"} onClick={() => setTab("saved")}>
+          Saved ({savedPapers.hydrated ? savedPapers.saved.length : "..."})
+        </TabButton>
+      </nav>
+
+      {tab === "search" && errorEntries.length > 0 && (
+        <p className="mb-4 rounded-lg border-2 border-coral/40 bg-coral/10 px-4 py-2 text-sm">
+          Couldn&apos;t reach{" "}
+          {errorEntries.map(([s]) => SOURCE_LABELS[s]).join(", ")} just now -
+          the other sources still came through.
+        </p>
+      )}
+
+      <div className="space-y-4">
+        {tab === "search" && (
+          <>
+            {loading && (
+              <LoadingState text="Digging through arXiv, Semantic Scholar, and Crossref..." />
+            )}
+            {!loading &&
+              papers.map((paper, i) => (
+                <PaperCard
+                  key={paper.id}
+                  paper={paper}
+                  index={i}
+                  savedPapers={savedPapers}
+                />
+              ))}
+            {!loading && searched && papers.length === 0 && (
+              <EmptyState text="Nothing turned up for that search - try a different phrase." />
+            )}
+            {!searched && !loading && (
+              <EmptyState text="Type a topic above to get started." />
+            )}
+          </>
+        )}
+
+        {tab === "recommended" && (
+          <>
+            {recLoading && (
+              <LoadingState text="Finding papers like the ones you've saved..." />
+            )}
+            {!recLoading &&
+              savedPapers.hydrated &&
+              savedPapers.saved.length === 0 && (
+                <EmptyState text="Save a few papers you like to get recommendations." />
+              )}
+            {!recLoading && recError && <EmptyState text={recError} />}
+            {!recLoading &&
+              !recError &&
+              recommended.map((paper, i) => (
+                <PaperCard
+                  key={paper.id}
+                  paper={paper}
+                  index={i}
+                  savedPapers={savedPapers}
+                />
+              ))}
+            {!recLoading &&
+              !recError &&
+              recFetched &&
+              recommended.length === 0 &&
+              savedPapers.saved.length > 0 && (
+                <EmptyState text="No recommendations came back this time - try saving a few more papers." />
+              )}
+          </>
+        )}
+
+        {tab === "saved" && (
+          <>
+            {savedPapers.hydrated && savedPapers.saved.length === 0 && (
+              <EmptyState text="Nothing saved yet - go find something worth reading." />
+            )}
+            {savedPapers.saved.map((paper, i) => (
+              <PaperCard
+                key={paper.id}
+                paper={paper}
+                index={i}
+                savedPapers={savedPapers}
+              />
+            ))}
+          </>
+        )}
+      </div>
+    </main>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      className={`-mb-0.5 border-b-4 px-1 pb-3 text-sm font-medium transition ${
+        active
+          ? "border-coral text-ink"
+          : "border-transparent text-ink/50 hover:text-ink"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-12 text-center">
+      <OwlMascot pose="shrug" className="h-20 w-20" />
+      <p className="text-ink/60">{text}</p>
+    </div>
+  );
+}
+
+function LoadingState({ text }: { text: string }) {
+  return (
+    <div className="flex flex-col items-center gap-3 py-12 text-center">
+      <OwlMascot pose="searching" className="h-20 w-20" />
+      <p className="text-ink/60">{text}</p>
     </div>
   );
 }
