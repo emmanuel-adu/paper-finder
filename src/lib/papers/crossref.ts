@@ -1,3 +1,4 @@
+import { fetchWithRetry } from "./fetchWithRetry";
 import type { Paper } from "./types";
 
 const CROSSREF_ENDPOINT = "https://api.crossref.org/works";
@@ -24,8 +25,7 @@ export async function searchCrossref(
   const mailtoParam = mailto ? `&mailto=${encodeURIComponent(mailto)}` : "";
   const url = `${CROSSREF_ENDPOINT}?query=${encodeURIComponent(query)}&rows=20${mailtoParam}`;
 
-  const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error(`Crossref HTTP ${res.status}`);
+  const res = await fetchWithRetry(url, { signal }, "Crossref");
   const data = await res.json();
   const items: CrossrefItem[] = data.message?.items ?? [];
 

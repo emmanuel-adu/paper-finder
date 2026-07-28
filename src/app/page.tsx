@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import { SearchBar } from "@/components/SearchBar";
 import { PaperCard } from "@/components/PaperCard";
 import { OwlMascot } from "@/components/OwlMascot";
@@ -9,6 +9,7 @@ import { toS2RecommendationId } from "@/lib/papers/semanticScholar";
 import type { Paper, PaperSource, SearchResponse } from "@/lib/papers/types";
 
 type Tab = "search" | "recommended" | "saved";
+type SortMode = "relevance" | "year";
 
 const SOURCE_LABELS: Record<PaperSource, string> = {
   arxiv: "arXiv",
@@ -20,9 +21,13 @@ export default function Page() {
   const [tab, setTab] = useState<Tab>("search");
   const [query, setQuery] = useState("");
   const [papers, setPapers] = useState<Paper[]>([]);
+  const [relevancePapers, setRelevancePapers] = useState<Paper[] | null>(null);
+  const [sortMode, setSortMode] = useState<SortMode>("year");
+  const [reranking, setReranking] = useState(false);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [errors, setErrors] = useState<SearchResponse["sourceErrors"]>({});
+  const searchTokenRef = useRef(0);
 
   const [recommended, setRecommended] = useState<Paper[]>([]);
   const [recLoading, setRecLoading] = useState(false);
@@ -32,13 +37,20 @@ export default function Page() {
   const savedPapers = useSavedPapers();
 
   async function handleSearch(q: string) {
+    const token = ++searchTokenRef.current;
+
     setQuery(q);
     setLoading(true);
     setSearched(true);
     setTab("search");
+    setSortMode("year");
+    setRelevancePapers(null);
+
+    let results: Paper[] = [];
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
       const data: SearchResponse = await res.json();
+      results = data.papers;
       setPapers(data.papers);
       setErrors(data.sourceErrors);
     } catch {
@@ -46,6 +58,25 @@ export default function Page() {
       setErrors({});
     } finally {
       setLoading(false);
+    }
+
+    if (results.length === 0) return;
+
+    // Re-rank by semantic relevance in the background, entirely client-side -
+    // never blocks the initial (year-sorted) results from showing immediately.
+    setReranking(true);
+    try {
+      const { rerankBySimilarity } = await import("@/lib/embeddings/rerank");
+      const reranked = await rerankBySimilarity(q, results);
+      if (searchTokenRef.current === token) {
+        setRelevancePapers(reranked);
+        setSortMode("relevance");
+      }
+    } catch {
+      // Model unavailable (unsupported browser, blocked network, etc.) -
+      // silently stay on year sort, no error shown to the user.
+    } finally {
+      if (searchTokenRef.current === token) setReranking(false);
     }
   }
 
@@ -84,18 +115,30 @@ export default function Page() {
   }
 
   const errorEntries = Object.entries(errors) as [PaperSource, string][];
+  const displayedPapers =
+    sortMode === "relevance" && relevancePapers ? relevancePapers : papers;
 
   return (
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
-      <header className="mb-8 flex items-center gap-3">
-        <OwlMascot pose="mark" className="h-12 w-12" />
-        <div>
-          <h1 className="font-display text-3xl font-bold">Paper Finder</h1>
-          <p className="text-sm text-ink/60">
-            Search arXiv, Semantic Scholar, and Crossref at once. No login,
-            ever.
-          </p>
+      <header className="mb-8 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <OwlMascot pose="mark" className="h-12 w-12" />
+          <div>
+            <h1 className="font-display text-3xl font-bold">Paper Finder</h1>
+            <p className="text-sm text-ink/60">
+              Search arXiv, Semantic Scholar, and Crossref at once. No login,
+              ever.
+            </p>
+          </div>
         </div>
+        <a
+          href="https://github.com/emmanuel-adu/paper-finder"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 rounded-lg border-2 border-ink bg-white px-3 py-1.5 text-sm font-medium text-ink shadow-[3px_3px_0_var(--ink)] transition hover:bg-cream"
+        >
+          View on GitHub ↗
+        </a>
       </header>
 
       <SearchBar onSearch={handleSearch} loading={loading} />
@@ -123,6 +166,31 @@ export default function Page() {
         </p>
       )}
 
+      {tab === "search" && !loading && papers.length > 0 && (
+        <div className="mb-4 flex items-center gap-3 text-sm">
+          <span className="text-ink/50">Sort by:</span>
+          <div className="flex gap-2">
+            <SortPill
+              active={sortMode === "relevance"}
+              disabled={!relevancePapers}
+              onClick={() => relevancePapers && setSortMode("relevance")}
+            >
+              Relevance
+            </SortPill>
+            <SortPill
+              active={sortMode === "year"}
+              disabled={false}
+              onClick={() => setSortMode("year")}
+            >
+              Year
+            </SortPill>
+          </div>
+          {reranking && (
+            <span className="text-ink/40">Improving ranking...</span>
+          )}
+        </div>
+      )}
+
       <div className="space-y-4">
         {tab === "search" && (
           <>
@@ -130,7 +198,7 @@ export default function Page() {
               <LoadingState text="Digging through arXiv, Semantic Scholar, and Crossref..." />
             )}
             {!loading &&
-              papers.map((paper, i) => (
+              displayedPapers.map((paper, i) => (
                 <PaperCard
                   key={paper.id}
                   paper={paper}
@@ -214,6 +282,30 @@ function TabButton({
         active
           ? "border-coral text-ink"
           : "border-transparent text-ink/50 hover:text-ink"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function SortPill({
+  active,
+  disabled,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  disabled: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      className={`rounded-full border-2 border-ink px-3 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-40 ${
+        active ? "bg-coral text-white" : "bg-white text-ink hover:bg-cream"
       }`}
     >
       {children}

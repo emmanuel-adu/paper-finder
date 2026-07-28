@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { mapSemanticScholarPaper, S2Paper } from "@/lib/papers/semanticScholar";
+import {
+  mapSemanticScholarPaper,
+  s2Headers,
+  S2Paper,
+} from "@/lib/papers/semanticScholar";
+import { fetchWithRetry } from "@/lib/papers/fetchWithRetry";
+import { UpstreamHttpError } from "@/lib/papers/errors";
 import type { Paper } from "@/lib/papers/types";
 
 export const dynamic = "force-dynamic";
@@ -27,16 +33,22 @@ export async function POST(req: NextRequest) {
 
   const url = `${S2_RECOMMENDATIONS_ENDPOINT}?fields=${S2_FIELDS}&limit=20`;
 
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ positivePaperIds: paperIds }),
-  });
-
-  if (!res.ok) {
+  let res: Response;
+  try {
+    res = await fetchWithRetry(
+      url,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...s2Headers() },
+        body: JSON.stringify({ positivePaperIds: paperIds }),
+      },
+      "Semantic Scholar recommendations",
+    );
+  } catch (err) {
+    const status = err instanceof UpstreamHttpError ? err.status : 502;
     return NextResponse.json(
-      { error: `Semantic Scholar recommendations HTTP ${res.status}` },
-      { status: 502 },
+      { error: err instanceof Error ? err.message : "Unknown error" },
+      { status },
     );
   }
 

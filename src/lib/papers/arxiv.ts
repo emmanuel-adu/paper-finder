@@ -1,4 +1,5 @@
 import { XMLParser } from "fast-xml-parser";
+import { fetchWithRetry } from "./fetchWithRetry";
 import type { Paper } from "./types";
 
 const ARXIV_ENDPOINT = "http://export.arxiv.org/api/query";
@@ -14,18 +15,7 @@ function clean(text: unknown): string {
     .trim();
 }
 
-export async function searchArxiv(
-  query: string,
-  signal: AbortSignal,
-): Promise<Paper[]> {
-  const url =
-    `${ARXIV_ENDPOINT}?search_query=${encodeURIComponent(`all:${query}`)}` +
-    `&start=0&max_results=20&sortBy=relevance&sortOrder=descending`;
-
-  const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error(`arXiv HTTP ${res.status}`);
-  const xml = await res.text();
-
+export function parseArxivFeed(xml: string): Paper[] {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
@@ -71,4 +61,17 @@ export async function searchArxiv(
       arxivId,
     };
   });
+}
+
+export async function searchArxiv(
+  query: string,
+  signal: AbortSignal,
+): Promise<Paper[]> {
+  const url =
+    `${ARXIV_ENDPOINT}?search_query=${encodeURIComponent(`all:${query}`)}` +
+    `&start=0&max_results=20&sortBy=relevance&sortOrder=descending`;
+
+  const res = await fetchWithRetry(url, { signal }, "arXiv");
+  const xml = await res.text();
+  return parseArxivFeed(xml);
 }

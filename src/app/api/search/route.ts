@@ -3,6 +3,7 @@ import { searchArxiv } from "@/lib/papers/arxiv";
 import { searchSemanticScholar } from "@/lib/papers/semanticScholar";
 import { searchCrossref } from "@/lib/papers/crossref";
 import { mergeResults } from "@/lib/papers/merge";
+import { UpstreamHttpError } from "@/lib/papers/errors";
 import type { Paper, PaperSource, SearchResponse } from "@/lib/papers/types";
 
 export const dynamic = "force-dynamic";
@@ -44,6 +45,13 @@ export async function GET(req: NextRequest) {
     const name = sources[i].name;
     if (result.status === "fulfilled") {
       allPapers.push(...result.value);
+    } else if (
+      result.reason instanceof UpstreamHttpError &&
+      result.reason.status === 429
+    ) {
+      // Rate-limited on a free/unauthenticated tier - expected under load,
+      // not a noteworthy outage. Degrade silently rather than alarming the
+      // user; the other sources' results still come through.
     } else {
       sourceErrors[name] =
         result.reason instanceof Error

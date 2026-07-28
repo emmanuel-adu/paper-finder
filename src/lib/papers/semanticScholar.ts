@@ -1,7 +1,16 @@
+import { fetchWithRetry } from "./fetchWithRetry";
 import type { Paper } from "./types";
 
 const S2_SEARCH_ENDPOINT = "https://api.semanticscholar.org/graph/v1/paper/search";
 const S2_FIELDS = "title,abstract,authors,year,externalIds,openAccessPdf,url";
+
+/** Semantic Scholar's unauthenticated tier shares a global rate-limit pool
+ * and can 429 under load. If SEMANTIC_SCHOLAR_API_KEY is set, send it - this
+ * raises the rate limit considerably and removes the 429s at the source. */
+export function s2Headers(): Record<string, string> {
+  const apiKey = process.env.SEMANTIC_SCHOLAR_API_KEY;
+  return apiKey ? { "x-api-key": apiKey } : {};
+}
 
 export interface S2Paper {
   paperId: string;
@@ -49,8 +58,11 @@ export async function searchSemanticScholar(
   signal: AbortSignal,
 ): Promise<Paper[]> {
   const url = `${S2_SEARCH_ENDPOINT}?query=${encodeURIComponent(query)}&fields=${S2_FIELDS}&limit=20`;
-  const res = await fetch(url, { signal });
-  if (!res.ok) throw new Error(`Semantic Scholar HTTP ${res.status}`);
+  const res = await fetchWithRetry(
+    url,
+    { signal, headers: s2Headers() },
+    "Semantic Scholar",
+  );
   const data = await res.json();
   const papers: S2Paper[] = data.data ?? [];
   return papers.map(mapSemanticScholarPaper);
