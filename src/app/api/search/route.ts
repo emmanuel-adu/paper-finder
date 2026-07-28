@@ -3,6 +3,7 @@ import { searchArxiv } from "@/lib/papers/arxiv";
 import { searchSemanticScholar } from "@/lib/papers/semanticScholar";
 import { searchCrossref } from "@/lib/papers/crossref";
 import { mergeResults } from "@/lib/papers/merge";
+import { simplifyQuery } from "@/lib/papers/simplifyQuery";
 import { UpstreamHttpError } from "@/lib/papers/errors";
 import type { Paper, PaperSource, SearchResponse } from "@/lib/papers/types";
 
@@ -27,13 +28,23 @@ export async function GET(req: NextRequest) {
     );
   }
 
+  // arXiv/Semantic Scholar/Crossref do keyword matching, not semantic search -
+  // strip filler words so a loosely-described paper ("a model that only uses
+  // attention, no recurrence, for sequence transduction") matches on its
+  // actual content terms instead of being diluted by "a", "that", "for", etc.
+  // The original `q` (unsimplified) is still what the client re-ranks against.
+  const simplifiedQ = simplifyQuery(q);
+
   const sources: { name: PaperSource; run: () => Promise<Paper[]> }[] = [
-    { name: "arxiv", run: () => withTimeout((s) => searchArxiv(q, s)) },
+    { name: "arxiv", run: () => withTimeout((s) => searchArxiv(simplifiedQ, s)) },
     {
       name: "semanticscholar",
-      run: () => withTimeout((s) => searchSemanticScholar(q, s)),
+      run: () => withTimeout((s) => searchSemanticScholar(simplifiedQ, s)),
     },
-    { name: "crossref", run: () => withTimeout((s) => searchCrossref(q, s)) },
+    {
+      name: "crossref",
+      run: () => withTimeout((s) => searchCrossref(simplifiedQ, s)),
+    },
   ];
 
   const settled = await Promise.allSettled(sources.map((s) => s.run()));
