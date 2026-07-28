@@ -1,15 +1,71 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
 export type OwlPose = "searching" | "shrug" | "happy" | "mark";
 
 interface OwlMascotProps {
   pose: OwlPose;
   className?: string;
+  /** Eyes subtly track the cursor. Only sensible for poses with round pupils. */
+  interactive?: boolean;
 }
 
-export function OwlMascot({ pose, className = "" }: OwlMascotProps) {
+const MAX_PUPIL_OFFSET = 2.5;
+
+export function OwlMascot({
+  pose,
+  className = "",
+  interactive = false,
+}: OwlMascotProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [pupilOffset, setPupilOffset] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    if (!interactive) return;
+
+    let rafId: number | null = null;
+    let latestEvent: MouseEvent | null = null;
+
+    function applyLatestPosition() {
+      rafId = null;
+      const svg = svgRef.current;
+      if (!latestEvent || !svg) return;
+
+      const rect = svg.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      const dx = latestEvent.clientX - centerX;
+      const dy = latestEvent.clientY - centerY;
+      const distance = Math.hypot(dx, dy) || 1;
+
+      setPupilOffset({
+        x: (dx / distance) * MAX_PUPIL_OFFSET,
+        y: (dy / distance) * MAX_PUPIL_OFFSET,
+      });
+    }
+
+    function handleMouseMove(e: MouseEvent) {
+      latestEvent = e;
+      if (rafId === null) {
+        rafId = requestAnimationFrame(applyLatestPosition);
+      }
+    }
+
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (rafId !== null) cancelAnimationFrame(rafId);
+    };
+  }, [interactive]);
+
   const wrapperClass = pose === "searching" ? "animate-bounce" : "";
+  const dx = interactive ? pupilOffset.x : 0;
+  const dy = interactive ? pupilOffset.y : 0;
 
   return (
     <svg
+      ref={svgRef}
       viewBox="0 0 100 100"
       className={`${className} ${wrapperClass}`}
       aria-hidden="true"
@@ -61,29 +117,39 @@ export function OwlMascot({ pose, className = "" }: OwlMascotProps) {
             stroke="var(--ink)"
             strokeWidth="3"
           />
-          <circle cx="38" cy="56" r="3" fill="var(--ink)" />
-          <circle cx="62" cy="56" r="3" fill="var(--ink)" />
+          <circle cx={38 + dx} cy={56 + dy} r="3" fill="var(--ink)" />
+          <circle cx={62 + dx} cy={56 + dy} r="3" fill="var(--ink)" />
         </>
       ) : (
         <>
-          <circle
-            cx="38"
-            cy="54"
-            r="10"
-            fill="white"
-            stroke="var(--ink)"
-            strokeWidth="3"
-          />
-          <circle
-            cx="62"
-            cy="54"
-            r="10"
-            fill="white"
-            stroke="var(--ink)"
-            strokeWidth="3"
-          />
-          <circle cx="40" cy="54" r="4" fill="var(--ink)" />
-          <circle cx="64" cy="54" r="4" fill="var(--ink)" />
+          <g
+            className={interactive ? "owl-blink" : ""}
+            style={interactive ? { transformOrigin: "38px 54px" } : undefined}
+          >
+            <circle
+              cx="38"
+              cy="54"
+              r="10"
+              fill="white"
+              stroke="var(--ink)"
+              strokeWidth="3"
+            />
+            <circle cx={40 + dx} cy={54 + dy} r="4" fill="var(--ink)" />
+          </g>
+          <g
+            className={interactive ? "owl-blink" : ""}
+            style={interactive ? { transformOrigin: "62px 54px" } : undefined}
+          >
+            <circle
+              cx="62"
+              cy="54"
+              r="10"
+              fill="white"
+              stroke="var(--ink)"
+              strokeWidth="3"
+            />
+            <circle cx={64 + dx} cy={54 + dy} r="4" fill="var(--ink)" />
+          </g>
         </>
       )}
 

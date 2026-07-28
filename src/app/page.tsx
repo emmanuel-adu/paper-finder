@@ -122,7 +122,7 @@ export default function Page() {
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
       <header className="mb-8 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <OwlMascot pose="mark" className="h-12 w-12" />
+          <OwlMascot pose="mark" className="h-12 w-12" interactive />
           <div>
             <h1 className="font-display text-3xl font-bold">Paper Finder</h1>
             <p className="text-sm text-ink/60">
