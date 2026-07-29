@@ -38,6 +38,18 @@ client          -> localStorage-backed saved papers, copy-to-clipboard prompt
 
 See `src/lib/papers/` for the per-source adapters and merge logic, and `src/lib/embeddings/` for the client-side re-ranker.
 
+## How the on-device AI ranking works
+
+When you search, results first appear sorted by year - instant, no AI involved. In the background, your browser then loads a small sentence-embedding model ([`Xenova/all-MiniLM-L6-v2`](https://huggingface.co/Xenova/all-MiniLM-L6-v2), via [transformers.js](https://github.com/huggingface/transformers.js)) and uses it to compare your query against each result's title and abstract, re-ranking the list by actual relevance once it's done. You can toggle between "Relevance" and "Year" sorting at any time.
+
+A few things worth knowing about it:
+
+- **It's free** - the model runs entirely in your browser (WebAssembly/WebGPU), not on a server. There's no API to call and no cost, so this feature can't be metered, capped, or taken away.
+- **Nothing leaves your device for this** - your query and the search results are already in your browser; the model just runs inference locally, no network round-trip involved.
+- **It's ~90MB, downloaded once** - your browser caches it after the first search, so it's only a one-time cost, not a per-search one.
+- **It degrades gracefully** - if your browser can't run it (or the download is blocked), search still works normally, just without the relevance re-sort.
+- **It also cleans up your query first** - common filler words ("a", "that", "for", ...) are stripped before searching arXiv/Semantic Scholar/Crossref, so a loosely remembered description ("that paper about attention without recurrence for sequence stuff") has a much better chance of surfacing the right result even before the AI ranking kicks in.
+
 ## Local setup
 
 ```bash

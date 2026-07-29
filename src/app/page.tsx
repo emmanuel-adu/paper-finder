@@ -167,28 +167,50 @@ export default function Page() {
       )}
 
       {tab === "search" && !loading && papers.length > 0 && (
-        <div className="mb-4 flex items-center gap-3 text-sm">
-          <span className="text-ink/50">Sort by:</span>
-          <div className="flex gap-2">
-            <SortPill
-              active={sortMode === "relevance"}
-              disabled={!relevancePapers}
-              onClick={() => relevancePapers && setSortMode("relevance")}
-            >
-              Relevance
-            </SortPill>
-            <SortPill
-              active={sortMode === "year"}
-              disabled={false}
-              onClick={() => setSortMode("year")}
-            >
-              Year
-            </SortPill>
+        <div className="mb-4">
+          <div className="flex items-center gap-3 text-sm">
+            <span className="text-ink/50">Sort by:</span>
+            <div className="flex gap-2">
+              <SortPill
+                active={sortMode === "relevance"}
+                disabled={!relevancePapers}
+                onClick={() => relevancePapers && setSortMode("relevance")}
+              >
+                Relevance
+              </SortPill>
+              <SortPill
+                active={sortMode === "year"}
+                disabled={false}
+                onClick={() => setSortMode("year")}
+              >
+                Year
+              </SortPill>
+            </div>
+            {reranking && (
+              <span className="text-ink/40">Improving ranking...</span>
+            )}
           </div>
-          {reranking && (
-            <span className="text-ink/40">Improving ranking...</span>
-          )}
+          <p className="mt-1 text-xs text-ink/40">
+            Relevance ranking runs a free AI model right in your browser -
+            nothing is sent to a server.{" "}
+            <a
+              href="https://github.com/emmanuel-adu/paper-finder#how-the-on-device-ai-ranking-works"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline hover:text-ink"
+            >
+              Learn more
+            </a>
+            .
+          </p>
         </div>
+      )}
+
+      {tab === "recommended" && (
+        <p className="mb-4 text-sm text-ink/60">
+          Recommendations are generated from the papers you&apos;ve saved -
+          save more to improve them.
+        </p>
       )}
 
       <div className="space-y-4">
