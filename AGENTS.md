@@ -4,7 +4,7 @@ Hey! If you're an AI coding agent helping someone contribute to Paper Finder, we
 
 ## What this is
 
-A free, no-login research paper finder - searches arXiv, Semantic Scholar, and Crossref at once, merges and dedupes the results, and never calls an LLM server-side (summarization is copy-a-prompt-into-your-own-LLM). Full pitch and feature list in [README.md](README.md). Live at https://paper-finder-five.vercel.app.
+A free, no-login research paper finder - searches arXiv, Semantic Scholar, and Crossref at once, merges and dedupes the results, and never calls an LLM server-side (summarization is copy-a-prompt-into-your-own-LLM). Full pitch and feature list in [README.md](README.md). Live at https://paperfinder.dev.
 
 ## Commands
 

@@ -2,7 +2,7 @@
 
 A free, no-login research paper discovery tool. Search arXiv, Semantic Scholar, and Crossref at once, save what you like, and get a ready-made prompt to have any LLM summarize a paper for you.
 
-**Live:** https://paper-finder-five.vercel.app
+**Live:** https://paperfinder.dev
 
 ![Paper Finder screenshot](docs/screenshot.jpg)
 

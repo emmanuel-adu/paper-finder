@@ -17,13 +17,13 @@ const description =
   "Search arXiv, Semantic Scholar, and Crossref at once, save the papers you like, and get a ready-made prompt to have an LLM summarize any of them.";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://paper-finder-five.vercel.app"),
+  metadataBase: new URL("https://paperfinder.dev"),
   title: "Paper Finder",
   description,
   openGraph: {
     title: "Paper Finder",
     description,
-    url: "https://paper-finder-five.vercel.app",
+    url: "https://paperfinder.dev",
     siteName: "Paper Finder",
     type: "website",
   },
