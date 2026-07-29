@@ -5,6 +5,8 @@
   --ink: #1a1a1a;
   --coral: #ff6b4a;
   --navy: #2b4c7e;
+  --surface: #ffffff;
+  --surface-hover: #f5f1e8;
 }
 
 @theme inline {
@@ -12,8 +14,40 @@
   --color-ink: var(--ink);
   --color-coral: var(--coral);
   --color-navy: var(--navy);
+  --color-surface: var(--surface);
+  --color-surface-hover: var(--surface-hover);
   --font-display: var(--font-fraunces);
   --font-sans: var(--font-inter);
+}
+
+/* Warm dark theme */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --cream: #24211d;
+    --ink: #f3ede4;
+    --coral: #ff7a5a;
+    --navy: #8ea9d6;
+    --surface: #312d28;
+    --surface-hover: #3a352f;
+  }
+}
+
+.dark {
+  --cream: #24211d;
+  --ink: #f3ede4;
+  --coral: #ff7a5a;
+  --navy: #8ea9d6;
+  --surface: #312d28;
+  --surface-hover: #3a352f;
+}
+
+.light {
+  --cream: #f5f1e8;
+  --ink: #1a1a1a;
+  --coral: #ff6b4a;
+  --navy: #2b4c7e;
+  --surface: #ffffff;
+  --surface-hover: #f5f1e8;
 }
 
 body {
@@ -22,14 +56,8 @@ body {
 }
 
 @keyframes owl-blink {
-  0%,
-  92%,
-  100% {
-    transform: scaleY(1);
-  }
-  95% {
-    transform: scaleY(0.1);
-  }
+  0%, 92%, 100% {transform: scaleY(1);}
+  95% {transform: scaleY(0.1);}
 }
 
 .owl-blink {
@@ -37,17 +65,17 @@ body {
 }
 
 @keyframes pop {
-  0% {
-    transform: scale(1);
-  }
-  45% {
-    transform: scale(1.22);
-  }
-  100% {
-    transform: scale(1);
-  }
+  0% {transform: scale(1);}
+  45% {transform: scale(1.22);}
+  100% {transform: scale(1);}
 }
 
 .animate-pop {
   animation: pop 0.3s ease;
+}
+.preserve-owl {
+  --cream: #f5f1e8;
+  --ink: #1a1a1a;
+  --coral: #ff6b4a;
+  --navy: #2b4c7e;
 }

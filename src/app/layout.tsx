@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -13,27 +14,6 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const description =
-  "Search arXiv, Semantic Scholar, and Crossref at once, save the papers you like, and get a ready-made prompt to have an LLM summarize any of them.";
-
-export const metadata: Metadata = {
-  metadataBase: new URL("https://paperfinder.dev"),
-  title: "Paper Finder",
-  description,
-  openGraph: {
-    title: "Paper Finder",
-    description,
-    url: "https://paperfinder.dev",
-    siteName: "Paper Finder",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Paper Finder",
-    description,
-  },
-};
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -44,6 +24,19 @@ export default function RootLayout({
       lang="en"
       className={`${fraunces.variable} ${inter.variable} h-full antialiased`}
     >
+      <head>
+        <Script id="theme-init" strategy="beforeInteractive">
+          {`
+            (function () {
+              const saved = localStorage.getItem("theme");
+              const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+              const shouldBeDark = saved === "dark" || (!saved && systemDark);
+              document.documentElement.classList.add(shouldBeDark ? "dark" : "light");
+            })();
+          `}
+        </Script>
+      </head>
+
       <body className="min-h-full flex flex-col font-sans bg-cream text-ink">
         {children}
       </body>
