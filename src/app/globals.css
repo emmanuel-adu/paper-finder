@@ -1,10 +1,19 @@
 @import "tailwindcss";
 
 :root {
+  /* Light theme (default) */
   --cream: #f5f1e8;
   --ink: #1a1a1a;
   --coral: #ff6b4a;
   --navy: #2b4c7e;
+}
+
+.dark {
+  /* Only override what changes */
+  --cream: #24211d;
+  --ink: #f3ede4;
+  --coral: #ff7a5a;
+  --navy: #8ea9d6;
 }
 
 @theme inline {
@@ -50,4 +59,11 @@ body {
 
 .animate-pop {
   animation: pop 0.3s ease;
+}
+
+.preserve-owl {
+  --cream: #f5f1e8;
+  --ink: #1a1a1a;
+  --coral: #ff6b4a;
+  --navy: #2b4c7e;
 }

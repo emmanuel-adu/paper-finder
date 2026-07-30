@@ -7,6 +7,7 @@ import { OwlMascot } from "@/components/OwlMascot";
 import { useSavedPapers } from "@/hooks/useSavedPapers";
 import { toS2RecommendationId } from "@/lib/papers/semanticScholar";
 import type { Paper, PaperSource, SearchResponse } from "@/lib/papers/types";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 type Tab = "search" | "recommended" | "saved";
 type SortMode = "relevance" | "year";
@@ -122,7 +123,7 @@ export default function Page() {
     <main className="mx-auto w-full max-w-3xl flex-1 px-6 py-10">
       <header className="mb-8 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
-          <OwlMascot pose="mark" className="h-12 w-12" interactive />
+          <OwlMascot pose="mark" className="h-12 w-12 preserve-owl" interactive />
           <div>
             <h1 className="font-display text-3xl font-bold">Paper Finder</h1>
             <p className="text-sm text-ink/60">
@@ -131,14 +132,17 @@ export default function Page() {
             </p>
           </div>
         </div>
-        <a
-          href="https://github.com/emmanuel-adu/paper-finder"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 rounded-lg border-2 border-ink bg-white px-3 py-1.5 text-sm font-medium text-ink shadow-[3px_3px_0_var(--ink)] transition hover:bg-cream"
-        >
-          View on GitHub ↗
-        </a>
+        <div className="flex items-center gap-2 shrink-0">
+          <ThemeToggle />
+          <a
+            href="https://github.com/emmanuel-adu/paper-finder"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="rounded-lg border-2 border-ink bg-surface px-3 py-1.5 text-sm font-medium text-ink shadow-[3px_3px_0_var(--ink)] transition hover:bg-surface-hover"
+          >
+            View on GitHub ↗
+          </a>
+        </div>
       </header>
 
       <SearchBar onSearch={handleSearch} loading={loading} />
@@ -338,7 +342,7 @@ function SortPill({
 function EmptyState({ text }: { text: string }) {
   return (
     <div className="flex flex-col items-center gap-3 py-12 text-center">
-      <OwlMascot pose="shrug" className="h-20 w-20" />
+      <OwlMascot pose="shrug" className="h-20 w-20 preserve-owl" />
       <p className="text-ink/60">{text}</p>
     </div>
   );
@@ -347,7 +351,7 @@ function EmptyState({ text }: { text: string }) {
 function LoadingState({ text }: { text: string }) {
   return (
     <div className="flex flex-col items-center gap-3 py-12 text-center">
-      <OwlMascot pose="searching" className="h-20 w-20" />
+      <OwlMascot pose="searching" className="h-20 w-20 preserve-owl" />
       <p className="text-ink/60">{text}</p>
     </div>
   );
