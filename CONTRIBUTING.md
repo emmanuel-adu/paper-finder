@@ -22,6 +22,14 @@ npm test
 npm run build
 ```
 
+When a PR completes an existing issue, include a GitHub closing keyword in the PR description so the issue is linked and automatically closed after merge:
+
+```md
+Closes #123
+```
+
+`Fixes #123` and `Resolves #123` also work. If the change intentionally has no issue, use `Issue: N/A` and briefly explain why.
+
 ## Guidelines
 
 - Keep changes scoped - prefer several small PRs over one large one.
