@@ -35,6 +35,23 @@ body {
   color: var(--ink);
 }
 
+/* Keep the sort controls readable against the dark page surface. */
+.dark button.rounded-full.bg-white {
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.dark button.rounded-full.bg-white:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.dark button.rounded-full:disabled {
+  background: var(--surface-hover);
+  border-color: color-mix(in srgb, var(--ink) 35%, transparent);
+  color: color-mix(in srgb, var(--ink) 55%, transparent);
+  opacity: 1;
+}
+
 @keyframes owl-blink {
   0%,
   92%,
