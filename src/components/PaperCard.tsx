@@ -5,6 +5,7 @@ import type { Paper, PaperSource } from "@/lib/papers/types";
 import type { useSavedPapers } from "@/hooks/useSavedPapers";
 import { SaveButton } from "./SaveButton";
 import { CopyPromptButton } from "./CopyPromptButton";
+import { ExternalLinkIcon } from "./Icons";
 
 const SOURCE_LABELS: Record<PaperSource, string> = {
   arxiv: "arXiv",
@@ -84,9 +85,10 @@ export function PaperCard({ paper, index, savedPapers }: PaperCardProps) {
             href={paper.pdfUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-sm font-medium text-navy hover:underline"
+            className="inline-flex items-center gap-1 text-sm font-medium text-navy hover:underline"
           >
-            PDF ↗
+            PDF
+            <ExternalLinkIcon className="h-3.5 w-3.5" />
           </a>
         )}
       </div>
