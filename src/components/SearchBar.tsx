@@ -23,7 +23,7 @@ export function SearchBar({ onSearch, loading }: SearchBarProps) {
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder="Vertical Federated Learning, diffusion models, ..."
-        className="flex-1 rounded-lg border-2 border-ink bg-white px-4 py-2.5 text-ink placeholder:text-ink/40 focus:outline-none focus:ring-2 focus:ring-coral"
+        className="flex-1 rounded-lg border-2 border-ink bg-surface px-4 py-2.5 text-ink placeholder:text-ink/50 focus:outline-none focus:ring-2 focus:ring-coral"
       />
       <button
         type="submit"
