@@ -7,29 +7,23 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
     const saved = localStorage.getItem("theme");
     const systemDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const shouldBeDark = saved === "dark" || (!saved && systemDark);
-    setIsDark(shouldBeDark);
 
-    const html = document.documentElement;
-    html.classList.remove("dark", "light");
-    html.classList.add(shouldBeDark ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", shouldBeDark);
+    setIsDark(shouldBeDark); // eslint-disable-line react-hooks/set-state-in-effect
+    setMounted(true);
   }, []);
 
   const toggle = () => {
     const next = !isDark;
     setIsDark(next);
-    const html = document.documentElement;
-    html.classList.remove("dark", "light");
-    html.classList.add(next ? "dark" : "light");
+    document.documentElement.classList.toggle("dark", next);
     localStorage.setItem("theme", next ? "dark" : "light");
   };
 
-  if (!mounted) {
-    return <div className="h-9 w-9" />;
-  }
+  if (!mounted) return <div className="h-9 w-9" />;
 
   return (
     <button
