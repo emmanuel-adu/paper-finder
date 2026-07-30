@@ -17,6 +17,27 @@ npm run build   # production build - run this before considering any change done
 
 All four run in CI on every push/PR (`.github/workflows/ci.yml`). Run them locally before opening a PR.
 
+## Pull requests and issue linking
+
+When working on an existing GitHub issue, every pull request must link and close that issue from the PR description using a GitHub closing keyword:
+
+```md
+Closes #123
+Fixes #123
+Resolves #123
+```
+
+Use the issue number for the work being completed. Do not use only `Related to #123` when the PR fully resolves the issue, because that does not close the issue after merge.
+
+Before opening a PR:
+
+1. Confirm the correct issue number.
+2. Add `Closes #<issue-number>` to the PR description.
+3. Include a concise summary and testing notes.
+4. Confirm the PR targets the default branch.
+
+For work that intentionally has no issue, write `Issue: N/A` and explain why in the PR description.
+
 ## Where things live
 
 - `src/lib/papers/types.ts` - the shared `Paper` shape every source normalizes into.
