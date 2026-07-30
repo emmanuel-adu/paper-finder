@@ -34,7 +34,7 @@ export function PaperCard({ paper, index, savedPapers }: PaperCardProps) {
 
   return (
     <div
-      className={`${rotate} hover:-translate-y-1 hover:rotate-0 rounded-xl border-2 border-ink bg-white p-5 shadow-[4px_4px_0_var(--ink)] transition hover:shadow-[6px_6px_0_var(--ink)]`}
+      className={`${rotate} hover:-translate-y-1 hover:rotate-0 rounded-xl border-2 border-ink bg-surface p-5 shadow-[4px_4px_0_var(--ink)] transition hover:shadow-[6px_6px_0_var(--ink)]`}
     >
       <div className="flex items-start justify-between gap-3">
         <a
