@@ -19,7 +19,7 @@ All four run in CI on every push/PR (`.github/workflows/ci.yml`). Run them local
 
 ## Pull requests and issue linking
 
-When working on an existing GitHub issue, every pull request must link and close that issue from the PR description using a GitHub closing keyword:
+Every pull request should correspond to a GitHub issue. If no suitable issue exists, create one before opening the PR. Describe the problem or improvement, expected behavior, and relevant context, then reference that issue in the PR description using a GitHub closing keyword:
 
 ```md
 Closes #123
@@ -31,12 +31,11 @@ Use the issue number for the work being completed. Do not use only `Related to #
 
 Before opening a PR:
 
-1. Confirm the correct issue number.
-2. Add `Closes #<issue-number>` to the PR description.
-3. Include a concise summary and testing notes.
-4. Confirm the PR targets the default branch.
-
-For work that intentionally has no issue, write `Issue: N/A` and explain why in the PR description.
+1. Find the existing issue for the work, or create a new issue if none exists.
+2. Confirm the correct issue number.
+3. Add `Closes #<issue-number>` to the PR description.
+4. Include a concise summary and testing notes.
+5. Confirm the PR targets the default branch.
 
 ## Where things live
 
